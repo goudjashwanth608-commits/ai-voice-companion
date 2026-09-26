@@ -7,6 +7,7 @@ const maleBtn = document.getElementById("maleBtn");
 const micBtn = document.getElementById("micBtn");
 
 let selectedCompanion = "Maya";
+let wakeListening = true;
 
 const SpeechRecognition =
   window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -16,74 +17,98 @@ let recognition = null;
 if (SpeechRecognition) {
   recognition = new SpeechRecognition();
 
-  recognition.continuous = false;
+  recognition.continuous = true;
   recognition.interimResults = false;
   recognition.lang = "en-IN";
 
   recognition.onstart = () => {
-    statusText.textContent = "Listening...";
-    message.textContent = "I'm listening...";
+    statusText.textContent = `Listening for "Hey ${selectedCompanion}"...`;
   };
 
   recognition.onresult = (event) => {
-    const spokenText = event.results[0][0].transcript;
+    const text =
+      event.results[event.results.length - 1][0].transcript
+        .toLowerCase()
+        .trim();
 
-    statusText.textContent = "You said:";
-    message.textContent = spokenText;
+    console.log("Heard:", text);
 
-    console.log("User said:", spokenText);
+    const wakeName = selectedCompanion.toLowerCase();
 
-    // Temporary voice response
-    speak(
-      `I heard you say ${spokenText}. I'm here with you.`
-    );
+    // Check whether the user said the companion's name
+    if (
+      text.includes(`hey ${wakeName}`) ||
+      text.includes(wakeName)
+    ) {
+      activateCompanion();
+    }
   };
 
   recognition.onerror = (event) => {
-    statusText.textContent = "Microphone error";
-    message.textContent = "Please allow microphone access and try again.";
+    console.log("Recognition error:", event.error);
 
-    console.log("Speech recognition error:", event.error);
+    if (event.error === "not-allowed") {
+      statusText.textContent = "Microphone permission required";
+      message.textContent =
+        "Please allow microphone access.";
+    }
   };
 
   recognition.onend = () => {
-    statusText.textContent = "Ready";
+    // Restart listening when possible
+    if (wakeListening) {
+      setTimeout(() => {
+        try {
+          recognition.start();
+        } catch (error) {
+          console.log("Restarting...");
+        }
+      }, 500);
+    }
   };
-} else {
-  message.textContent =
-    "Speech recognition is not supported in this browser.";
+}
+
+function activateCompanion() {
+  statusText.textContent = "Active";
+  message.textContent = `Yes, I'm here. What do you need?`;
+
+  speak(`Yes, I'm here. What do you need?`);
 }
 
 femaleBtn.addEventListener("click", () => {
   selectedCompanion = "Maya";
 
   companionName.textContent = "Maya";
-  message.textContent = 'Say "Hey Maya" to talk with me';
-  statusText.textContent = "Ready";
+  message.textContent = 'Say "Hey Maya"';
+  statusText.textContent = 'Listening...';
 });
 
 maleBtn.addEventListener("click", () => {
   selectedCompanion = "Arjun";
 
   companionName.textContent = "Arjun";
-  message.textContent = 'Say "Hey Arjun" to talk with me';
-  statusText.textContent = "Ready";
+  message.textContent = 'Say "Hey Arjun"';
+  statusText.textContent = 'Listening...';
 });
 
 micBtn.addEventListener("click", () => {
   if (!recognition) {
     message.textContent =
-      "Your browser does not support voice recognition.";
+      "Voice recognition is not supported here.";
     return;
   }
 
-  recognition.start();
+  wakeListening = true;
+
+  try {
+    recognition.start();
+  } catch (error) {
+    console.log("Already listening");
+  }
 });
 
 function speak(text) {
-  if (!("speechSynthesis" in window)) {
-    return;
-  }
+  if (!("speechSynthesis" in window)) return;
 
   window.speechSynthesis.cancel();
 
@@ -91,7 +116,12 @@ function speak(text) {
 
   speech.lang = "en-IN";
   speech.rate = 1;
-  speech.pitch = selectedCompanion === "Maya" ? 1.15 : 0.9;
+
+  if (selectedCompanion === "Maya") {
+    speech.pitch = 1.15;
+  } else {
+    speech.pitch = 0.9;
+  }
 
   window.speechSynthesis.speak(speech);
 }
