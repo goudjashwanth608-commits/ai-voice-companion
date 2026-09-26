@@ -8,6 +8,52 @@ const micBtn = document.getElementById("micBtn");
 
 let selectedCompanion = "Maya";
 
+const SpeechRecognition =
+  window.SpeechRecognition || window.webkitSpeechRecognition;
+
+let recognition = null;
+
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.lang = "en-IN";
+
+  recognition.onstart = () => {
+    statusText.textContent = "Listening...";
+    message.textContent = "I'm listening...";
+  };
+
+  recognition.onresult = (event) => {
+    const spokenText = event.results[0][0].transcript;
+
+    statusText.textContent = "You said:";
+    message.textContent = spokenText;
+
+    console.log("User said:", spokenText);
+
+    // Temporary voice response
+    speak(
+      `I heard you say ${spokenText}. I'm here with you.`
+    );
+  };
+
+  recognition.onerror = (event) => {
+    statusText.textContent = "Microphone error";
+    message.textContent = "Please allow microphone access and try again.";
+
+    console.log("Speech recognition error:", event.error);
+  };
+
+  recognition.onend = () => {
+    statusText.textContent = "Ready";
+  };
+} else {
+  message.textContent =
+    "Speech recognition is not supported in this browser.";
+}
+
 femaleBtn.addEventListener("click", () => {
   selectedCompanion = "Maya";
 
@@ -25,11 +71,27 @@ maleBtn.addEventListener("click", () => {
 });
 
 micBtn.addEventListener("click", () => {
-  statusText.textContent = "Listening...";
-  message.textContent = "I'm listening...";
+  if (!recognition) {
+    message.textContent =
+      "Your browser does not support voice recognition.";
+    return;
+  }
 
-  setTimeout(() => {
-    statusText.textContent = "Ready";
-    message.textContent = `I'm here. What would you like to talk about?`;
-  }, 2000);
+  recognition.start();
 });
+
+function speak(text) {
+  if (!("speechSynthesis" in window)) {
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const speech = new SpeechSynthesisUtterance(text);
+
+  speech.lang = "en-IN";
+  speech.rate = 1;
+  speech.pitch = selectedCompanion === "Maya" ? 1.15 : 0.9;
+
+  window.speechSynthesis.speak(speech);
+}
