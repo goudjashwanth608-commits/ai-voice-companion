@@ -2,84 +2,189 @@
 <html lang="en">
 
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <title>AI Voice Companion</title>
 
-  <link rel="stylesheet" href="style.css">
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
 </head>
+
 
 <body>
 
   <main class="app">
 
-    <!-- Top bar -->
-    <div class="top-bar">
 
-      <div class="status">
-        <span class="dot"></span>
-        <span id="statusText">Ready</span>
+    <!-- TOP BAR -->
+
+    <header class="top-bar">
+
+      <div class="brand">
+        <span class="brand-icon">✦</span>
+        <span>AI Companion</span>
       </div>
 
-      <button id="settingsBtn" class="settings-btn">
+
+      <button
+        id="settingsBtn"
+        class="settings-btn"
+      >
         ⚙️
       </button>
 
-    </div>
+    </header>
 
 
-    <!-- Companion -->
-    <section class="companion">
 
-      <div class="avatar">
-        <div class="avatar-face">☺</div>
+    <!-- AI ORB -->
+
+    <section class="orb-section">
+
+      <div
+        id="orb"
+        class="orb"
+      >
+
+        <div class="orb-core"></div>
+
+        <div class="orb-ring ring-one"></div>
+
+        <div class="orb-ring ring-two"></div>
+
+        <div class="orb-ring ring-three"></div>
+
       </div>
 
-      <h1 id="companionName">Maya</h1>
+
+      <h1 id="companionName">
+        Maya
+      </h1>
+
+
+      <div class="status">
+
+        <span
+          id="statusDot"
+          class="status-dot"
+        ></span>
+
+        <span id="statusText">
+          Ready
+        </span>
+
+      </div>
+
 
       <p id="message">
-        Say "Hey Maya" to talk with me
+        Say "Hey Maya" to talk
       </p>
 
     </section>
 
 
-    <!-- Gender selection -->
-    <section class="controls">
 
-      <button id="femaleBtn">
-        👩 Female
-      </button>
+    <!-- CHAT AREA -->
 
-      <button id="maleBtn">
-        👨 Male
+    <section
+      id="chatBox"
+      class="chat-box"
+    >
+
+      <div class="welcome-message">
+
+        <div class="welcome-icon">
+          ✨
+        </div>
+
+        <h2>
+          Hi, I'm Maya
+        </h2>
+
+        <p>
+          Talk to me or type a message below.
+        </p>
+
+      </div>
+
+    </section>
+
+
+
+    <!-- TEXT INPUT -->
+
+    <section class="chat-input-area">
+
+      <input
+        type="text"
+        id="chatInput"
+        placeholder="Type a message..."
+        autocomplete="off"
+      >
+
+
+      <button
+        id="sendBtn"
+        class="send-btn"
+      >
+        ➤
       </button>
 
     </section>
 
 
-    <!-- Microphone -->
-    <button id="micBtn" class="mic">
-      🎙️
+
+    <!-- VOICE BUTTON -->
+
+    <button
+      id="micBtn"
+      class="voice-button"
+    >
+
+      <span class="mic-icon">
+        🎙️
+      </span>
+
+      <span>
+        Talk
+      </span>
+
     </button>
 
+
     <p class="hint">
-      Voice-first AI companion
+      Say "Hey Maya" or tap Talk
     </p>
+
 
   </main>
 
 
-  <!-- SETTINGS DASHBOARD -->
 
-  <div id="settingsPanel" class="settings-panel">
+  <!-- SETTINGS PANEL -->
+
+  <div
+    id="settingsPanel"
+    class="settings-panel"
+  >
 
     <div class="settings-card">
 
+
       <div class="settings-header">
 
-        <h2>⚙️ Settings</h2>
+        <h2>
+          ⚙️ Settings
+        </h2>
 
         <button id="closeSettings">
           ✕
@@ -88,7 +193,8 @@
       </div>
 
 
-      <!-- Companion name -->
+
+      <!-- NAME -->
 
       <label>
         Companion Name
@@ -102,7 +208,8 @@
       >
 
 
-      <!-- Gender -->
+
+      <!-- GENDER -->
 
       <label>
         Companion Type
@@ -121,20 +228,24 @@
       </div>
 
 
-      <!-- Voice -->
+
+      <!-- VOICE -->
 
       <label>
         Voice
       </label>
 
       <select id="voiceSelect">
+
         <option value="">
           Loading voices...
         </option>
+
       </select>
 
 
-      <!-- Language -->
+
+      <!-- LANGUAGE -->
 
       <label>
         Language
@@ -173,7 +284,8 @@
       </select>
 
 
-      <!-- Voice speed -->
+
+      <!-- SPEED -->
 
       <label>
         Voice Speed
@@ -189,11 +301,14 @@
       >
 
       <div class="range-value">
-        <span id="speedValue">1.0</span>
+        <span id="speedValue">
+          1.0
+        </span>
       </div>
 
 
-      <!-- Voice pitch -->
+
+      <!-- PITCH -->
 
       <label>
         Voice Pitch
@@ -209,11 +324,14 @@
       >
 
       <div class="range-value">
-        <span id="pitchValue">1.0</span>
+        <span id="pitchValue">
+          1.0
+        </span>
       </div>
 
 
-      <!-- Wake name -->
+
+      <!-- WAKE NAME -->
 
       <div class="wake-box">
 
@@ -228,15 +346,23 @@
       </div>
 
 
-      <!-- Save -->
 
-      <button id="saveSettings" class="save-btn">
+      <!-- SAVE -->
+
+      <button
+        id="saveSettings"
+        class="save-btn"
+      >
+
         💾 Save Settings
+
       </button>
+
 
     </div>
 
   </div>
+
 
 
   <script src="script.js"></script>
