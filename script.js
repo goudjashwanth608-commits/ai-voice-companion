@@ -1,16 +1,45 @@
-const companionName = document.getElementById("companionName");
-const message = document.getElementById("message");
-const statusText = document.getElementById("statusText");
+/* =========================
+   ELEMENTS
+========================= */
 
-const femaleBtn = document.getElementById("femaleBtn");
-const maleBtn = document.getElementById("maleBtn");
-const micBtn = document.getElementById("micBtn");
+const companionName =
+  document.getElementById("companionName");
 
-const settingsBtn = document.getElementById("settingsBtn");
-const settingsPanel = document.getElementById("settingsPanel");
-const closeSettings = document.getElementById("closeSettings");
+const message =
+  document.getElementById("message");
 
-const nameInput = document.getElementById("nameInput");
+const statusText =
+  document.getElementById("statusText");
+
+const statusDot =
+  document.getElementById("statusDot");
+
+const orb =
+  document.getElementById("orb");
+
+const chatBox =
+  document.getElementById("chatBox");
+
+const chatInput =
+  document.getElementById("chatInput");
+
+const sendBtn =
+  document.getElementById("sendBtn");
+
+const micBtn =
+  document.getElementById("micBtn");
+
+const settingsBtn =
+  document.getElementById("settingsBtn");
+
+const settingsPanel =
+  document.getElementById("settingsPanel");
+
+const closeSettings =
+  document.getElementById("closeSettings");
+
+const nameInput =
+  document.getElementById("nameInput");
 
 const settingsFemale =
   document.getElementById("settingsFemale");
@@ -44,7 +73,7 @@ const saveSettings =
 
 
 /* =========================
-   DEFAULT SETTINGS
+   SETTINGS
 ========================= */
 
 let settings = {
@@ -64,12 +93,11 @@ let settings = {
 };
 
 
-/* =========================
-   LOAD SAVED SETTINGS
-========================= */
-
 const savedSettings =
-  localStorage.getItem("companionSettings");
+  localStorage.getItem(
+    "companionSettings"
+  );
+
 
 if (savedSettings) {
 
@@ -82,7 +110,9 @@ if (savedSettings) {
 
   } catch (error) {
 
-    console.log("Could not load settings.");
+    console.log(
+      "Could not load settings."
+    );
 
   }
 
@@ -97,101 +127,136 @@ const SpeechRecognition =
   window.SpeechRecognition ||
   window.webkitSpeechRecognition;
 
+
 let recognition = null;
 
 let wakeListening = true;
 
 let waitingForCommand = false;
 
+let voiceConversation = false;
+
 
 if (SpeechRecognition) {
 
-  recognition = new SpeechRecognition();
+  recognition =
+    new SpeechRecognition();
 
   recognition.continuous = true;
 
   recognition.interimResults = false;
 
-  recognition.lang = settings.language;
+  recognition.lang =
+    settings.language;
 
 
   recognition.onstart = () => {
 
     if (!waitingForCommand) {
 
-      statusText.textContent =
-        `Listening for "Hey ${settings.name}"...`;
+      setState(
+        "ready",
+        `Listening for "Hey ${settings.name}"...`
+      );
 
     }
 
   };
 
 
-  recognition.onresult = (event) => {
+  recognition.onresult =
+    (event) => {
 
-    const text =
-      event.results[
-        event.results.length - 1
-      ][0]
-      .transcript
-      .toLowerCase()
-      .trim();
+      const result =
+        event.results[
+          event.results.length - 1
+        ];
 
-
-    console.log("Heard:", text);
-
-
-    const wakeName =
-      settings.name.toLowerCase();
+      const text =
+        result[0]
+          .transcript
+          .toLowerCase()
+          .trim();
 
 
-    /* Wake name */
+      console.log(
+        "Heard:",
+        text
+      );
 
-    if (
-      !waitingForCommand &&
-      (
-        text.includes(`hey ${wakeName}`) ||
+
+      /*
+       * If we are waiting for a command
+       */
+
+      if (waitingForCommand) {
+
+        waitingForCommand = false;
+
+        addMessage(
+          "user",
+          text
+        );
+
+        askAI(
+          text,
+          true
+        );
+
+        return;
+
+      }
+
+
+      /*
+       * Wake name detection
+       */
+
+      const wakeName =
+        settings.name
+          .toLowerCase()
+          .trim();
+
+
+      if (
+        text.includes(
+          `hey ${wakeName}`
+        ) ||
         text.includes(wakeName)
-      )
-    ) {
+      ) {
 
-      activateCompanion();
+        activateCompanion();
 
-      return;
+      }
 
-    }
-
-
-    /* User command */
-
-    if (waitingForCommand) {
-
-      handleCommand(text);
-
-    }
-
-  };
+    };
 
 
-  recognition.onerror = (event) => {
+  recognition.onerror =
+    (event) => {
 
-    console.log(
-      "Recognition error:",
-      event.error
-    );
+      console.log(
+        "Recognition error:",
+        event.error
+      );
 
 
-    if (event.error === "not-allowed") {
+      if (
+        event.error ===
+        "not-allowed"
+      ) {
 
-      statusText.textContent =
-        "Microphone permission required";
+        setState(
+          "error",
+          "Microphone permission required"
+        );
 
-      message.textContent =
-        "Please allow microphone access.";
+        message.textContent =
+          "Please allow microphone access.";
 
-    }
+      }
 
-  };
+    };
 
 
   recognition.onend = () => {
@@ -222,6 +287,71 @@ if (SpeechRecognition) {
 
 
 /* =========================
+   STATE
+========================= */
+
+function setState(
+  state,
+  text
+) {
+
+  statusText.textContent =
+    text;
+
+
+  orb.classList.remove(
+    "listening",
+    "thinking",
+    "speaking",
+    "error"
+  );
+
+
+  if (state) {
+
+    orb.classList.add(
+      state
+    );
+
+  }
+
+
+  if (state === "error") {
+
+    statusDot.style.background =
+      "#ff5c7c";
+
+  }
+
+  else if (
+    state === "thinking"
+  ) {
+
+    statusDot.style.background =
+      "#ffd166";
+
+  }
+
+  else if (
+    state === "speaking"
+  ) {
+
+    statusDot.style.background =
+      "#8d9aff";
+
+  }
+
+  else {
+
+    statusDot.style.background =
+      "#55ffb0";
+
+  }
+
+}
+
+
+/* =========================
    ACTIVATE COMPANION
 ========================= */
 
@@ -229,10 +359,17 @@ function activateCompanion() {
 
   waitingForCommand = true;
 
-  statusText.textContent = "Active";
+  voiceConversation = true;
+
+  setState(
+    "listening",
+    "Listening..."
+  );
+
 
   message.textContent =
-    `Yes, I'm here. What do you need?`;
+    "I'm listening...";
+
 
   speak(
     `Yes, I'm here. What do you need?`
@@ -240,50 +377,69 @@ function activateCompanion() {
 
 }
 
+
 /* =========================
-   HANDLE COMMAND
+   ASK AI
 ========================= */
 
-async function handleCommand(command) {
+async function askAI(
+  userMessage,
+  shouldSpeak
+) {
 
-  waitingForCommand = false;
+  setState(
+    "thinking",
+    "Thinking..."
+  );
 
-  statusText.textContent = "Thinking...";
-  message.textContent = "Thinking...";
+
+  message.textContent =
+    "Thinking...";
 
 
   try {
 
-    const response = await fetch("/api/chat", {
+    const response =
+      await fetch(
+        "/api/chat",
+        {
 
-      method: "POST",
+          method: "POST",
 
-      headers: {
-        "Content-Type": "application/json"
-      },
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
 
-      body: JSON.stringify({
+          body: JSON.stringify({
 
-        message: command,
+            message:
+              userMessage,
 
-        companionName: settings.name,
+            companionName:
+              settings.name,
 
-        gender: settings.gender,
+            gender:
+              settings.gender,
 
-        language: settings.language
+            language:
+              settings.language
 
-      })
+          })
 
-    });
+        }
+      );
 
 
-    const data = await response.json();
+    const data =
+      await response.json();
 
 
     if (!response.ok) {
 
       throw new Error(
-        data.error || "AI request failed"
+        data.error ||
+        "AI request failed"
       );
 
     }
@@ -294,29 +450,461 @@ async function handleCommand(command) {
       "Sorry, I couldn't answer that.";
 
 
-    message.textContent = answer;
+    /*
+     * AI reply appears in chat
+     */
 
-    statusText.textContent = "Speaking...";
+    addMessage(
+      "ai",
+      answer
+    );
 
-    speak(answer);
+
+    message.textContent =
+      answer;
+
+
+    /*
+     * Voice request:
+     * speak the answer
+     */
+
+    if (shouldSpeak) {
+
+      speak(answer);
+
+    }
+
+    else {
+
+      setState(
+        "ready",
+        "Ready"
+      );
+
+    }
 
 
   } catch (error) {
 
-    console.error("AI error:", error);
+    console.error(
+      "AI error:",
+      error
+    );
 
-    statusText.textContent = "Error";
 
-    message.textContent =
+    const errorMessage =
       "Sorry, I couldn't connect to the AI right now.";
 
-    speak(
-      "Sorry, I couldn't connect to the AI right now."
+
+    addMessage(
+      "ai",
+      errorMessage
     );
+
+
+    message.textContent =
+      errorMessage;
+
+
+    setState(
+      "error",
+      "Connection error"
+    );
+
+
+    if (shouldSpeak) {
+
+      speak(errorMessage);
+
+    }
 
   }
 
 }
+
+
+/* =========================
+   CHAT MESSAGE
+========================= */
+
+function addMessage(
+  sender,
+  text
+) {
+
+  const welcome =
+    chatBox.querySelector(
+      ".welcome-message"
+    );
+
+
+  if (welcome) {
+
+    welcome.remove();
+
+  }
+
+
+  const wrapper =
+    document.createElement(
+      "div"
+    );
+
+
+  wrapper.className =
+    `chat-message ${sender}`;
+
+
+  const bubble =
+    document.createElement(
+      "div"
+    );
+
+
+  bubble.className =
+    "message-bubble";
+
+
+  bubble.textContent =
+    text;
+
+
+  wrapper.appendChild(
+    bubble
+  );
+
+
+  chatBox.appendChild(
+    wrapper
+  );
+
+
+  chatBox.scrollTop =
+    chatBox.scrollHeight;
+
+}
+
+
+/* =========================
+   TEXT CHAT
+========================= */
+
+async function sendChatMessage() {
+
+  const text =
+    chatInput.value.trim();
+
+
+  if (!text) {
+
+    return;
+
+  }
+
+
+  chatInput.value = "";
+
+
+  addMessage(
+    "user",
+    text
+  );
+
+
+  /*
+   * Typed messages:
+   * AI replies in chat only.
+   */
+
+  await askAI(
+    text,
+    false
+  );
+
+}
+
+
+/* =========================
+   SEND BUTTON
+========================= */
+
+sendBtn.addEventListener(
+  "click",
+  sendChatMessage
+);
+
+
+/* =========================
+   ENTER KEY
+========================= */
+
+chatInput.addEventListener(
+  "keydown",
+  (event) => {
+
+    if (
+      event.key ===
+      "Enter"
+    ) {
+
+      sendChatMessage();
+
+    }
+
+  }
+);
+
+
+/* =========================
+   VOICE BUTTON
+========================= */
+
+micBtn.addEventListener(
+  "click",
+  () => {
+
+    if (!recognition) {
+
+      message.textContent =
+        "Voice recognition is not supported in this browser.";
+
+      return;
+
+    }
+
+
+    wakeListening = true;
+
+    waitingForCommand = true;
+
+    voiceConversation = true;
+
+
+    setState(
+      "listening",
+      "Listening..."
+    );
+
+
+    message.textContent =
+      "I'm listening...";
+
+
+    try {
+
+      recognition.start();
+
+    } catch (error) {
+
+      console.log(
+        "Recognition already running."
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================
+   TEXT TO SPEECH
+========================= */
+
+function speak(text) {
+
+  if (
+    !("speechSynthesis" in window)
+  ) {
+
+    console.log(
+      "Speech synthesis not supported."
+    );
+
+    return;
+
+  }
+
+
+  window.speechSynthesis.cancel();
+
+
+  const speech =
+    new SpeechSynthesisUtterance(
+      text
+    );
+
+
+  speech.lang =
+    settings.language;
+
+
+  speech.rate =
+    Number(settings.speed);
+
+
+  speech.pitch =
+    Number(settings.pitch);
+
+
+  const voices =
+    window.speechSynthesis
+      .getVoices();
+
+
+  const selectedVoice =
+    voices.find(
+      voice =>
+        voice.name ===
+        settings.voiceName
+    );
+
+
+  if (selectedVoice) {
+
+    speech.voice =
+      selectedVoice;
+
+  }
+
+
+  setState(
+    "speaking",
+    "Speaking..."
+  );
+
+
+  speech.onend = () => {
+
+    setState(
+      "ready",
+      "Ready"
+    );
+
+
+    message.textContent =
+      `Say "Hey ${settings.name}"`;
+
+  };
+
+
+  speech.onerror = () => {
+
+    setState(
+      "error",
+      "Voice error"
+    );
+
+  };
+
+
+  window.speechSynthesis
+    .speak(speech);
+
+}
+
+
+/* =========================
+   VOICES
+========================= */
+
+function loadVoices() {
+
+  if (
+    !("speechSynthesis" in window)
+  ) {
+
+    return;
+
+  }
+
+
+  const voices =
+    window.speechSynthesis
+      .getVoices();
+
+
+  voiceSelect.innerHTML = "";
+
+
+  if (
+    voices.length === 0
+  ) {
+
+    const option =
+      document.createElement(
+        "option"
+      );
+
+
+    option.value = "";
+
+    option.textContent =
+      "Default device voice";
+
+
+    voiceSelect.appendChild(
+      option
+    );
+
+
+    return;
+
+  }
+
+
+  voices.forEach(
+    voice => {
+
+      const option =
+        document.createElement(
+          "option"
+        );
+
+
+      option.value =
+        voice.name;
+
+
+      option.textContent =
+        `${voice.name} (${voice.lang})`;
+
+
+      voiceSelect.appendChild(
+        option
+      );
+
+    }
+  );
+
+
+  if (
+    settings.voiceName
+  ) {
+
+    voiceSelect.value =
+      settings.voiceName;
+
+  }
+
+}
+
+
+if (
+  "speechSynthesis"
+  in window
+) {
+
+  window.speechSynthesis
+    .onvoiceschanged =
+    loadVoices;
+
+}
+
+
+loadVoices();
+
+
 /* =========================
    SETTINGS UI
 ========================= */
@@ -340,11 +928,13 @@ function updateSettingsUI() {
 
 
   speedValue.textContent =
-    Number(settings.speed).toFixed(1);
+    Number(settings.speed)
+      .toFixed(1);
 
 
   pitchValue.textContent =
-    Number(settings.pitch).toFixed(1);
+    Number(settings.pitch)
+      .toFixed(1);
 
 
   wakePreview.textContent =
@@ -361,25 +951,15 @@ function updateSettingsUI() {
 
   settingsFemale.classList.toggle(
     "active",
-    settings.gender === "female"
+    settings.gender ===
+      "female"
   );
 
 
   settingsMale.classList.toggle(
     "active",
-    settings.gender === "male"
-  );
-
-
-  femaleBtn.classList.toggle(
-    "active",
-    settings.gender === "female"
-  );
-
-
-  maleBtn.classList.toggle(
-    "active",
-    settings.gender === "male"
+    settings.gender ===
+      "male"
   );
 
 }
@@ -399,6 +979,7 @@ settingsBtn.addEventListener(
     settingsPanel.classList.add(
       "active"
     );
+
 
     loadVoices();
 
@@ -467,8 +1048,9 @@ speedRange.addEventListener(
   () => {
 
     speedValue.textContent =
-      Number(speedRange.value)
-      .toFixed(1);
+      Number(
+        speedRange.value
+      ).toFixed(1);
 
   }
 );
@@ -483,8 +1065,9 @@ pitchRange.addEventListener(
   () => {
 
     pitchValue.textContent =
-      Number(pitchRange.value)
-      .toFixed(1);
+      Number(
+        pitchRange.value
+      ).toFixed(1);
 
   }
 );
@@ -502,7 +1085,9 @@ saveSettings.addEventListener(
       nameInput.value.trim();
 
 
-    if (newName.length > 0) {
+    if (
+      newName.length > 0
+    ) {
 
       settings.name =
         newName;
@@ -519,16 +1104,22 @@ saveSettings.addEventListener(
 
 
     settings.speed =
-      Number(speedRange.value);
+      Number(
+        speedRange.value
+      );
 
 
     settings.pitch =
-      Number(pitchRange.value);
+      Number(
+        pitchRange.value
+      );
 
 
     localStorage.setItem(
       "companionSettings",
-      JSON.stringify(settings)
+      JSON.stringify(
+        settings
+      )
     );
 
 
@@ -548,88 +1139,23 @@ saveSettings.addEventListener(
     );
 
 
-    statusText.textContent =
-      "Settings saved";
+    setState(
+      "ready",
+      "Settings saved"
+    );
 
 
     message.textContent =
       `I'm ${settings.name}. Say "Hey ${settings.name}"`;
 
 
+    /*
+     * Settings confirmation is spoken.
+     */
+
     speak(
       `Settings saved. I'm ${settings.name}.`
     );
-
-  }
-);
-
-
-/* =========================
-   MAIN FEMALE BUTTON
-========================= */
-
-femaleBtn.addEventListener(
-  "click",
-  () => {
-
-    settings.gender =
-      "female";
-
-    updateSettingsUI();
-
-  }
-);
-
-
-/* =========================
-   MAIN MALE BUTTON
-========================= */
-
-maleBtn.addEventListener(
-  "click",
-  () => {
-
-    settings.gender =
-      "male";
-
-    updateSettingsUI();
-
-  }
-);
-
-
-/* =========================
-   MICROPHONE BUTTON
-========================= */
-
-micBtn.addEventListener(
-  "click",
-  () => {
-
-    if (!recognition) {
-
-      message.textContent =
-        "Voice recognition is not supported in this browser.";
-
-      return;
-
-    }
-
-
-    wakeListening = true;
-
-
-    try {
-
-      recognition.start();
-
-    } catch (error) {
-
-      console.log(
-        "Already listening."
-      );
-
-    }
 
   }
 );
