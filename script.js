@@ -240,237 +240,83 @@ function activateCompanion() {
 
 }
 
-
 /* =========================
    HANDLE COMMAND
 ========================= */
 
-function handleCommand(command) {
+async function handleCommand(command) {
 
   waitingForCommand = false;
 
-  statusText.textContent =
-    "Thinking...";
-
-  message.textContent =
-    command;
+  statusText.textContent = "Thinking...";
+  message.textContent = "Thinking...";
 
 
-  let response = "";
+  try {
+
+    const response = await fetch("/api/chat", {
+
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+
+        message: command,
+
+        companionName: settings.name,
+
+        gender: settings.gender,
+
+        language: settings.language
+
+      })
+
+    });
 
 
-  if (
-    command.includes("hello") ||
-    command.includes("hi") ||
-    command.includes("hey")
-  ) {
-
-    response =
-      `Hello! I'm ${settings.name}. Nice to talk with you.`;
-
-  }
-
-  else if (
-    command.includes("how are you")
-  ) {
-
-    response =
-      "I'm doing great! I'm here and ready to talk with you.";
-
-  }
-
-  else if (
-    command.includes("your name")
-  ) {
-
-    response =
-      `My name is ${settings.name}.`;
-
-  }
-
-  else if (
-    command.includes("thank you") ||
-    command.includes("thanks")
-  ) {
-
-    response =
-      "You're welcome!";
-
-  }
-
-  else if (
-    command.includes("good morning")
-  ) {
-
-    response =
-      "Good morning! I hope you have a wonderful day.";
-
-  }
-
-  else {
-
-    response =
-      `I heard you say ${command}. The real AI brain will answer this after we connect the AI backend.`;
-
-  }
+    const data = await response.json();
 
 
-  message.textContent =
-    response;
+    if (!response.ok) {
 
-  statusText.textContent =
-    "Speaking...";
-
-  speak(response);
-
-}
-
-
-/* =========================
-   TEXT TO SPEECH
-========================= */
-
-function speak(text) {
-
-  if (
-    !("speechSynthesis" in window)
-  ) {
-
-    return;
-
-  }
-
-
-  window.speechSynthesis.cancel();
-
-
-  const speech =
-    new SpeechSynthesisUtterance(text);
-
-
-  speech.lang =
-    settings.language;
-
-
-  speech.rate =
-    Number(settings.speed);
-
-
-  speech.pitch =
-    Number(settings.pitch);
-
-
-  const voices =
-    window.speechSynthesis.getVoices();
-
-
-  const selectedVoice =
-    voices.find(
-      voice =>
-        voice.name === settings.voiceName
-    );
-
-
-  if (selectedVoice) {
-
-    speech.voice =
-      selectedVoice;
-
-  }
-
-
-  speech.onend = () => {
-
-    if (waitingForCommand) {
-
-      statusText.textContent =
-        "Listening to you...";
-
-      message.textContent =
-        "I'm listening...";
-
-    } else {
-
-      statusText.textContent =
-        "Ready";
+      throw new Error(
+        data.error || "AI request failed"
+      );
 
     }
 
-  };
+
+    const answer =
+      data.answer ||
+      "Sorry, I couldn't answer that.";
 
 
-  window.speechSynthesis.speak(
-    speech
-  );
+    message.textContent = answer;
 
-}
+    statusText.textContent = "Speaking...";
 
-
-/* =========================
-   LOAD VOICES
-========================= */
-
-function loadVoices() {
-
-  const voices =
-    window.speechSynthesis.getVoices();
+    speak(answer);
 
 
-  voiceSelect.innerHTML = "";
+  } catch (error) {
 
+    console.error("AI error:", error);
 
-  if (voices.length === 0) {
+    statusText.textContent = "Error";
 
-    const option =
-      document.createElement("option");
+    message.textContent =
+      "Sorry, I couldn't connect to the AI right now.";
 
-    option.textContent =
-      "Default device voice";
-
-    option.value = "";
-
-    voiceSelect.appendChild(option);
-
-    return;
-
-  }
-
-
-  voices.forEach(voice => {
-
-    const option =
-      document.createElement("option");
-
-
-    option.value =
-      voice.name;
-
-
-    option.textContent =
-      `${voice.name} (${voice.lang})`;
-
-
-    voiceSelect.appendChild(option);
-
-  });
-
-
-  if (settings.voiceName) {
-
-    voiceSelect.value =
-      settings.voiceName;
+    speak(
+      "Sorry, I couldn't connect to the AI right now."
+    );
 
   }
 
 }
-
-
-window.speechSynthesis.onvoiceschanged =
-  loadVoices;
-
-loadVoices();
-
-
 /* =========================
    SETTINGS UI
 ========================= */
